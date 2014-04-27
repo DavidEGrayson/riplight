@@ -43,10 +43,6 @@ describe Riplight::Lexer do
     ]
   end
 
-  it "identifies constants" do
-    expect(lex('ABC')).to eq [['ABC', :constant]]
-  end
-
   it 'identifies constants in class definitions' do
     expect(lex('class A')).to eq [
       ['class', :keyword],
@@ -55,16 +51,8 @@ describe Riplight::Lexer do
     ]
   end
 
-  it "identifies constants that are actually method calls", flaw: true do
-    expect(lex('A()')[0]).to eq ['A', :constant]
-  end
-
   it 'identifies character literals as strings' do
     expect(lex('?t')).to eq [['?t', :string]]
-  end
-
-  it 'identifies backrefs as global variables' do
-    expect(lex('$1')).to eq [['$1', :global_var]]
   end
 
   it 'identifies single-quoted string' do
@@ -83,6 +71,27 @@ describe Riplight::Lexer do
     ]
   end
 
+  context 'inside a double-quoted string' do
+    it 'identifies embedded expressions' do
+      expect(lex('"#{b}"')).to eq [
+        [?", :string],
+        ['#{', :interpolation_mark],
+        ['b', :identifier],
+        ['}', :interpolation_mark],
+        [?", :string]
+      ]
+    end
+
+    it 'identifies embedded instance variables' do
+      expect(lex('"#@a"')).to eq [
+        [?", :string],
+        ['#', :interpolation_mark],
+        ['@a', :instance_var],
+        [?", :string],
+      ]
+    end
+  end
+
   it 'identifies backticks' do
     expect(lex('`ls`')).to eq [
       ['`', :string],
@@ -99,8 +108,40 @@ describe Riplight::Lexer do
     expect(lex('# hi')).to eq [['# hi', :comment]]
   end
 
-  it 'identifies class variables' do
-    expect(lex('@@a')).to eq [['@@a', :class_var]]
+  describe 'variables' do
+    it 'identifies instance variables' do
+      expect(lex('@a')).to eq [['@a', :instance_var]]
+    end
+
+    it 'identifies class variables' do
+      expect(lex('@@a')).to eq [['@@a', :class_var]]
+    end
+
+    it "identifies constants" do
+      expect(lex('ABC')).to eq [['ABC', :constant]]
+    end
+
+    it "identifies constants that are actually method calls", flaw: true do
+      expect(lex('A()')[0]).to eq ['A', :constant]
+    end
+
+    it 'identifies normal global variables' do
+      expect(lex('$f')).to eq [['$f', :global_var]]
+    end
+
+    it 'identifies backrefs as global variables' do
+      expect(lex('$1')).to eq [['$1', :global_var]]
+    end
+  end
+
+  describe 'numbers' do
+    it 'identifies integers' do
+      expect(lex('44')).to eq [['44', :number]]
+    end
+
+    it 'identifies floats' do
+      expect(lex('44.0')).to eq [['44.0', :number]]
+    end
   end
 
   it 'identifies heredocs' do
@@ -112,6 +153,14 @@ describe Riplight::Lexer do
       ["\n", :space],
       ["line1\nline2\n", :string],
       ["END", :heredoc_end],
+    ]
+  end
+
+  it 'identifies embedded documentation as a comment' do
+    expect(lex("=begin\nhi\n=end")).to eq [
+      ["=begin\n", :comment],
+      ["hi\n", :comment],
+      ["=end", :comment],
     ]
   end
 
