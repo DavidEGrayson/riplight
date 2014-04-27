@@ -24,7 +24,8 @@ module Riplight
     def self.token_type(ripper_token_type)
       case ripper_token_type
       when :on_CHAR, :on_backtick, :on_tstring_beg, :on_tstring_content, :on_tstring_end,
-           :on_words_beg, :on_qwords_beg, :on_symbols_beg, :on_qsymbols_beg, :on_words_sep then :string
+           :on_words_beg, :on_qwords_beg, :on_symbols_beg, :on_qsymbols_beg, :on_words_sep,
+           :on_heredoc_beg, :on_heredoc_end then :string
       when :on_backref then :global_var
       when :on_comma then :comma
       when :on_comment, :on_embdoc_beg, :on_embdoc, :on_embdoc_end then :comment
@@ -32,8 +33,6 @@ module Riplight
       when :on_cvar then :class_var
       when :on_embexpr_beg, :on_embexpr_end, :on_embvar then :interpolation_mark
       when :on_gvar then :global_var
-      when :on_heredoc_beg then :heredoc_begin
-      when :on_heredoc_end then :heredoc_end
       when :on_ident then :identifier
       when :on_int, :on_float then :number
       when :on_ivar then :instance_var

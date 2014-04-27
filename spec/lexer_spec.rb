@@ -247,11 +247,11 @@ describe Riplight::Lexer do
     expect(lex("puts(<<END)\nline1\nline2\nEND")).to eq [
       ['puts', :identifier],
       ['(', :paren],
-      ['<<END', :heredoc_begin],
+      ['<<END', :string],
       [')', :paren],
       ["\n", :space],
       ["line1\nline2\n", :string],
-      ["END", :heredoc_end],
+      ["END", :string],
     ]
   end
 
