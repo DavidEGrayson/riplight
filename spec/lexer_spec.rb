@@ -38,6 +38,37 @@ describe Riplight::Lexer do
     end
   end
 
+  operators = %w{
+    + - / * % ** == != > < >= <= <=> === = += -= *= /= %= **= =~ !~
+    <<= >>= &= |= ^= &&= ||= ^ | & ~ << >> && || ! ? .. ... ::
+  }
+
+  operators.each do |operator|
+    it "identifies #{operator} as an operator" do
+      expect(lex("b #{operator} c")).to eq [
+        ['b', :identifier],
+        [' ', :space],
+        [operator, :operator],
+        [' ', :space],
+        ['c', :identifier],
+      ]
+    end
+  end
+
+  it 'identifies the ternary operator' do
+    expect(lex("a ? b : c")).to eq [
+      ['a', :identifier],
+      [' ', :space],
+      ['?', :operator],
+      [' ', :space],
+      ['b', :identifier],
+      [' ', :space],
+      [':', :operator],
+      [' ', :space],
+      ['c', :identifier],
+    ]
+  end
+
   it 'identifies period' do
     expect(lex('.')).to eq [['.', :period]]
   end
