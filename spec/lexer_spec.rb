@@ -59,6 +59,62 @@ describe Riplight::Lexer do
     expect(lex('A()')[0]).to eq ['A', :constant]
   end
 
+  it 'identifies character literals as strings' do
+    expect(lex('?t')).to eq [['?t', :string]]
+  end
+
+  it 'identifies backrefs as global variables' do
+    expect(lex('$1')).to eq [['$1', :global_var]]
+  end
+
+  it 'identifies single-quoted string' do
+    expect(lex("'abc'")).to eq [
+      [?', :string],
+      ['abc', :string],
+      [?', :string],
+    ]
+  end
+
+  it 'identifies double-quoted strings' do
+    expect(lex('"abc"')).to eq [
+      [?", :string],
+      ['abc', :string],
+      [?", :string],
+    ]
+  end
+
+  it 'identifies backticks' do
+    expect(lex('`ls`')).to eq [
+      ['`', :string],
+      ['ls', :string],
+      ['`', :string],
+    ]
+  end
+
+  it 'identifies commas' do
+    expect(lex(',')).to eq [[',', :comma]]
+  end
+
+  it 'identifies comments' do
+    expect(lex('# hi')).to eq [['# hi', :comment]]
+  end
+
+  it 'identifies class variables' do
+    expect(lex('@@a')).to eq [['@@a', :class_var]]
+  end
+
+  it 'identifies heredocs' do
+    expect(lex("puts(<<END)\nline1\nline2\nEND")).to eq [
+      ['puts', :identifier],
+      ['(', :paren],
+      ['<<END', :heredoc_begin],
+      [')', :paren],
+      ["\n", :space],
+      ["line1\nline2\n", :string],
+      ["END", :heredoc_end],
+    ]
+  end
+
   describe '__END__ keyword' do
     it 'identifies __END__ and includes the data after it' do
       expect(lex("hi\n__END__\ndata1\ndata2")).to eq [
@@ -76,6 +132,15 @@ describe Riplight::Lexer do
         ['__END__', :identifier],
         [' ', :space],
       ]
+    end
+  end
+
+  describe 'all events in Ripper::SCANNER_EVENTS' do
+    Ripper::SCANNER_EVENTS.each do |name|
+      name = "on_#{name}".to_sym
+      it "handles #{name.inspect}" do
+        expect(described_class.token_type(name)).to_not eq name
+      end
     end
   end
 end

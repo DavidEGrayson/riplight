@@ -21,8 +21,16 @@ module Riplight
 
     def self.token_type(ripper_token_type)
       case ripper_token_type
+      when :on_CHAR, :on_backtick, :on_tstring_beg, :on_tstring_content, :on_tstring_end then :string
+      when :on_backref then :global_var
+      when :on_comma then :comma
+      when :on_comment then :comment
       when :on_const then :constant
+      when :on_cvar then :class_var
+      when :on_heredoc_beg then :heredoc_begin
+      when :on_heredoc_end then :heredoc_end
       when :on_kw, :on___end__ then :keyword
+      when :on_lparen, :on_rparen then :paren
       when :on_period then :period
       when :on_sp, :on_ignored_nl, :on_nl then :space
       when :on_ident then :identifier
