@@ -25,6 +25,7 @@ module Riplight
       case ripper_token_type
       when :on_CHAR, :on_backtick, :on_tstring_beg, :on_tstring_content, :on_tstring_end,
            :on_words_beg, :on_qwords_beg, :on_symbols_beg, :on_qsymbols_beg, :on_words_sep,
+           :on_regexp_beg, :on_regexp_end,
            :on_heredoc_beg, :on_heredoc_end then :string
       when :on_backref then :global_var
       when :on_comma then :comma
@@ -37,11 +38,13 @@ module Riplight
       when :on_int, :on_float then :number
       when :on_ivar then :instance_var
       when :on_kw, :on___end__ then :keyword
-      when :on_lbrace, :on_rbrace then :brace
+      when :on_tlambda then :lambda
+      when :on_lbrace, :on_rbrace, :on_tlambeg then :brace
       when :on_lbracket, :on_rbracket then :bracket
       when :on_lparen, :on_rparen then :paren
       when :on_op then :operator
       when :on_period then :period
+      when :on_semicolon then :semicolon
       when :on_sp, :on_ignored_nl, :on_nl then :space
       when :on_symbeg, :on_label then :symbol
       else ripper_token_type

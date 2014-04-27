@@ -131,6 +131,7 @@ describe Riplight::Lexer do
   end
 
   it 'identifies backticks' do
+    # Unfortunately, this means you can't color backticks differently from normal strings.
     expect(lex('`ls`')).to eq [
       ['`', :string],
       ['ls', :string],
@@ -138,8 +139,21 @@ describe Riplight::Lexer do
     ]
   end
 
+  it 'identifies regular expression' do
+    # Unfortunately, this means you can't color regexes differently from normal strings.
+    expect(lex('/a/m')).to eq [
+      ['/', :string],
+      ['a', :string],
+      ['/m', :string],
+    ]
+  end
+
   it 'identifies commas' do
     expect(lex(',')).to eq [[',', :comma]]
+  end
+
+  it 'identifies semicolons' do
+    expect(lex(';')).to eq [[';', :semicolon]]
   end
 
   it 'identifies comments' do
@@ -290,6 +304,20 @@ describe Riplight::Lexer do
       ['a', :identifier],
       ['[', :bracket],
       [']', :bracket],
+    ]
+  end
+
+  it 'identifies lambas' do
+    expect(lex('->(a){a+1}')). to eq [
+      ['->', :lambda],
+      ['(', :paren],
+      ['a', :identifier],
+      [')', :paren],
+      ['{', :brace],
+      ['a', :identifier],
+      ['+', :operator],
+      ['1', :number],
+      ['}', :brace]
     ]
   end
 
