@@ -146,6 +146,67 @@ describe Riplight::Lexer do
     expect(lex('# hi')).to eq [['# hi', :comment]]
   end
 
+  describe 'strings starting with %' do
+    it 'identifies %q strings' do
+      expect(lex('%q{hi}')).to eq [
+        ['%q{', :string],
+        ['hi', :string],
+        ['}', :string],
+      ]
+    end
+
+    it 'identifies %Q strings' do
+      expect(lex('%Q{hi}')).to eq [
+        ['%Q{', :string],
+        ['hi', :string],
+        ['}', :string],
+      ]
+    end
+  end
+
+  describe 'arrays starting with %' do
+    it 'identifies %w arrays of words' do
+      expect(lex('%w[a b]')).to eq [
+        ['%w[', :string],
+        ['a', :string],
+        [' ', :string],
+        ['b', :string],
+        [']', :string],
+      ]
+    end
+
+    it 'identifies %W arrays of symbols' do
+      expect(lex('%W[a b]')).to eq [
+        ['%W[', :string],
+        ['a', :string],
+        [' ', :string],
+        ['b', :string],
+        [']', :string],
+      ]
+    end
+
+    it 'identifies %i arrays of symbols' do
+      # Unfortunately, we don't make it possible to color %i differently from %w.
+      expect(lex('%i[a b]')).to eq [
+        ['%i[', :string],
+        ['a', :string],
+        [' ', :string],
+        ['b', :string],
+        [']', :string],
+      ]
+    end
+
+    it 'identifies %I arrays of symbols' do
+      expect(lex('%I[a b]')).to eq [
+        ['%I[', :string],
+        ['a', :string],
+        [' ', :string],
+        ['b', :string],
+        [']', :string],
+      ]
+    end
+  end
+
   describe 'variables' do
     it 'identifies instance variables' do
       expect(lex('@a')).to eq [['@a', :instance_var]]
