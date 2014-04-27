@@ -202,6 +202,36 @@ describe Riplight::Lexer do
     ]
   end
 
+  it 'identifies braces in hash table' do
+    expect(lex('{}')).to eq [
+      ['{', :brace],
+      ['}', :brace],
+    ]
+  end
+
+  it 'identifies braces in block' do
+    expect(lex('loop{}')).to eq [
+      ['loop', :identifier],
+      ['{', :brace],
+      ['}', :brace],
+    ]
+  end
+
+  it 'identifies brackets for making an array' do
+    expect(lex('[]')).to eq [
+      ['[', :bracket],
+      [']', :bracket],
+    ]
+  end
+
+  it 'identifies brackets for calling a method' do
+    expect(lex('a[]')).to eq [
+      ['a', :identifier],
+      ['[', :bracket],
+      [']', :bracket],
+    ]
+  end
+
   describe 'symbols' do
     it 'identifies simple symbols' do
       # This requires merging a :on_symbeg to an :on_ident!
@@ -263,6 +293,15 @@ describe Riplight::Lexer do
         ['a', :identifier],
         ['}', :interpolation_mark],
         ['"', :string]
+      ]
+    end
+
+    it 'considers labels to be symbols' do
+      expect(lex('{b:4}')).to eq [
+        ['{', :brace],
+        ['b:', :symbol],
+        ['4', :number],
+        ['}', :brace],
       ]
     end
   end

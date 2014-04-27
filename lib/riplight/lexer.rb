@@ -37,11 +37,13 @@ module Riplight
       when :on_int, :on_float then :number
       when :on_ivar then :instance_var
       when :on_kw, :on___end__ then :keyword
+      when :on_lbrace, :on_rbrace then :brace
+      when :on_lbracket, :on_rbracket then :bracket
       when :on_lparen, :on_rparen then :paren
       when :on_op then :operator
       when :on_period then :period
       when :on_sp, :on_ignored_nl, :on_nl then :space
-      when :on_symbeg then :symbol
+      when :on_symbeg, :on_label then :symbol
       else ripper_token_type
       end
     end
