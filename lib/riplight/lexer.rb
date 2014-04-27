@@ -10,7 +10,7 @@ module Riplight
       tokens = ripper_tokens.map do |ripper_token|
         convert_ripper_token ripper_token
       end
-      add_end_data(source, ripper_tokens, tokens)
+      tokens.concat leftovers(source, ripper_tokens)
       tokens
     end
 
@@ -44,17 +44,16 @@ module Riplight
 
     private
 
-    def self.add_end_data(source, ripper_tokens, tokens)
+    def self.leftovers(source, ripper_tokens)
       last_token = ripper_tokens.last
-      return unless last_token[1] == :on___end__
-      end_row, end_column = last_token[0]
-      pp [end_column, last_token[2].size]
-      data_column = end_column + last_token[2].size
-      data = string_starting_at_coords(source, end_row, data_column)
+      row, column = last_token[0]
+      column += last_token[2].size
+      str = string_starting_at_coords(source, row, column)
 
-      if !data.empty?
-        tokens << [data, :end_data]
-      end
+      return [] if str.empty?
+
+      leftover_type = last_token[1] == :on___end__ ? :end_data : :unknown
+      [[str, leftover_type]]
     end
 
     def self.string_starting_at_coords(string, row, column)

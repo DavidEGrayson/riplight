@@ -10,6 +10,13 @@ describe Riplight::Lexer do
     described_class.lex *args
   end
 
+  it 'returns leftovers that Ripper could not lex' do
+    expect(lex(' 0x')).to eq [
+      [" ", :space],
+      ['0x', :unknown],
+    ]
+  end
+
   it 'identifies whitespace' do
     expect(lex(" \n\t  ")).to eq [
       [" ", :space],
@@ -135,7 +142,7 @@ describe Riplight::Lexer do
   end
 
   describe 'numbers' do
-    it 'identifies integers' do
+    it 'identifies decimal integers' do
       expect(lex('44')).to eq [['44', :number]]
     end
 
