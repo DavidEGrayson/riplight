@@ -7,6 +7,8 @@ module Riplight
     # @param line_number (Integer)
     def self.lex(source, filename = '-', line_number = 1)
       ripper_tokens = Ripper.lex(source, filename, line_number)
+      fix_simple_symbols(ripper_tokens)
+      fix_string_symbols(ripper_tokens)
       tokens = ripper_tokens.map do |ripper_token|
         convert_ripper_token ripper_token
       end
@@ -36,13 +38,49 @@ module Riplight
       when :on_ivar then :instance_var
       when :on_kw, :on___end__ then :keyword
       when :on_lparen, :on_rparen then :paren
+      when :on_op then :operator
       when :on_period then :period
       when :on_sp, :on_ignored_nl, :on_nl then :space
+      when :on_symbeg then :symbol
       else ripper_token_type
       end
     end
 
     private
+
+    # Combine :on_symbeg with :on_identifier immediately after it
+    # because everyone expects a syntax highlighter to do that.
+    def self.fix_simple_symbols(ripper_tokens)
+      # DANGER: Iterating over an array while shortening it
+      ripper_tokens.each_index do |index|
+        next unless ripper_tokens[index][1] == :on_symbeg && ripper_tokens[index + 1][1] == :on_ident
+        merge_ripper_tokens(ripper_tokens, index, 2)
+      end
+    end
+
+    # Split an :on_symbeg with ':"' into two pieces so that if people want to color
+    # strings and symbols differently those characters will be the right colors.
+    def self.fix_string_symbols(ripper_tokens)
+      # DANGER: Iterating over an array while increasing its length
+      values = %w{ :" :' }
+      pp values
+      ripper_tokens.each_index do |index|
+        token = ripper_tokens[index]
+        next unless token[1] == :on_symbeg && values.include?(token[2])
+        row, column = token[0]
+        new_tokens = [
+          [[row, column], :on_symbeg, ':'],
+          [[row, column + 1], :on_tstring_beg, token[2][1]],
+        ]
+        ripper_tokens[index, 1] = new_tokens
+      end
+    end
+
+    def self.merge_ripper_tokens(ripper_tokens, index, length)
+      tokens = ripper_tokens[index, length]
+      str = tokens.map { |t| t[2] }.join
+      ripper_tokens[index, length] = [[tokens[0][0], tokens[0][1], str]]
+    end
 
     def self.leftovers(source, ripper_tokens)
       last_token = ripper_tokens.last

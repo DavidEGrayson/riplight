@@ -171,6 +171,71 @@ describe Riplight::Lexer do
     ]
   end
 
+  describe 'symbols' do
+    it 'identifies simple symbols' do
+      # This requires merging a :on_symbeg to an :on_ident!
+      expect(lex(':s')).to eq [
+        [':s', :symbol]
+      ]
+    end
+
+    it 'handles multiple symbol symbols and leftovers' do
+      expect(lex(':a+:b+:c+:d')).to eq [
+        [':a', :symbol],
+        ['+', :operator],
+        [':b', :symbol],
+        ['+', :operator],
+        [':c', :symbol],
+        ['+', :operator],
+        [':d', :symbol],
+      ]
+    end
+
+    it 'identifies symbols made with double-quoted strings' do
+      # This kind of output makes us incompatible with Sublime Text because it likes
+      # to highlight :"s" as a symbol, but I think our way is more correct and it
+      # would look inconsistent if adding a little bit of interpolation changed
+      # the color of the symbol.
+      expect(lex(':"s"')).to eq [
+        [':', :symbol],
+        [?", :string],
+        ['s', :string],
+        [?", :string],
+      ]
+    end
+
+    it 'identifies symbols made with single-quoted strings' do
+      expect(lex(":'s'")).to eq [
+        [':', :symbol],
+        [?', :string],
+        ['s', :string],
+        [?', :string],
+      ]
+    end
+
+    it 'idenfities multiple symbols made with strings' do
+      expect(lex(":'s'+" * 5)).to eq [
+        [':', :symbol],
+        [?', :string],
+        ['s', :string],
+        [?', :string],
+        ['+', :operator],
+      ] * 5
+    end
+
+    it 'identifies symbols with double-quoteded strings and interpolation' do
+      expect(lex(':"s#{a}"')).to eq [
+        [':', :symbol],
+        ['"', :string],
+        ['s', :string],
+        ['#{', :interpolation_mark],
+        ['a', :identifier],
+        ['}', :interpolation_mark],
+        ['"', :string]
+      ]
+    end
+  end
+
   describe '__END__ keyword' do
     it 'identifies __END__ and includes the data after it' do
       expect(lex("hi\n__END__\ndata1\ndata2")).to eq [
