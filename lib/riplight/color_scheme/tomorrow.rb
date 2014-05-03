@@ -17,30 +17,32 @@ module Riplight::ColorScheme
       purple: '8959a8',
     }
   
+    # This is NOT the color scheme shown on https://github.com/ChrisKempson/Tomorrow-Theme.
+    # David has customized it.
     def self.full_color_scheme(base)
       {
         background: base[:background],
         foreground: base[:foreground],
+        comment: base[:comment],
 
         brace: nil,
         bracket: nil,
-        class_var: base[:red],  # this is just a guess
+        class_var: base[:red],
         comma: nil,
-        comment: base[:comment],
-        constant: base[:yellow],
-        global_var: base[:red],  # this is just a guess
+        constant: base[:orange],
+        global_var: base[:red],
         identifier: nil,
-        instance_var: nil,
+        instance_var: base[:purple],
         interpolation_mark: nil,
-        keyword: base[:purple],
+        keyword: base[:blue],
         lambda: nil,
         number: nil,
-        operator: base[:aqua],
+        operator: nil,
         paren: nil,
         period: nil,
         semicolon: nil,
         space: nil,
-        string: base[:green],
+        string: base[:aqua],
         symbol: base[:green],
       }
     end
