@@ -27,13 +27,12 @@ module Riplight
            :on_words_beg, :on_qwords_beg, :on_symbols_beg, :on_qsymbols_beg, :on_words_sep,
            :on_regexp_beg, :on_regexp_end,
            :on_heredoc_beg, :on_heredoc_end then :string
-      when :on_backref then :global_var
       when :on_comma then :comma
       when :on_comment, :on_embdoc_beg, :on_embdoc, :on_embdoc_end then :comment
       when :on_const then :constant
       when :on_cvar then :class_var
       when :on_embexpr_beg, :on_embexpr_end, :on_embvar then :interpolation_mark
-      when :on_gvar then :global_var
+      when :on_gvar, :on_backred then :global_var
       when :on_ident then :identifier
       when :on_int, :on_float then :number
       when :on_ivar then :instance_var
@@ -68,7 +67,6 @@ module Riplight
     def self.fix_string_symbols(ripper_tokens)
       # DANGER: Iterating over an array while increasing its length
       values = %w{ :" :' }
-      pp values
       ripper_tokens.each_index do |index|
         token = ripper_tokens[index]
         next unless token[1] == :on_symbeg && values.include?(token[2])

@@ -1,76 +1,32 @@
-require 'ripper'
-require 'pp'
-require 'rtf'
+require 'riplight'
+require 'optparse'
 
-tokens = Ripper.lex(ARGF.read)
+# TODO: allow specifying output file
 
-pp tokens
-exit
-
-def check_tokens_structure(tokens)
-  tokens.each_cons(2) do |e1, e2|
-    if e1[0][0] == e2[0][0]   # same line
-      if e2[0][1] != e1[0][1] + e1[2].size
-        raise "wtf #{e2.inspect}"
-      end
-    end
+options = { theme: 'tomorrow', output: 'html' }
+option_parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: riplight.rb [options] FILE'
+  
+  opts.on('-t', '--theme THEME', 'Specify color theme.') do |theme|
+    options[:theme] = theme
   end
+  
+  opts.on('-f', '--output-format FORMAT', 'Specify kind of output.') do |format|
+    options[:output_format] = format
+  end  
 end
 
-tommorrow = {
-  background: 'ffffff',
-  foreground: '4d4d4c',
-  comment: '8e908c',
-  red: 'c82829',
-  green: '718c00',
-}
+option_parser.parse!
 
-colors = {
-  keyword: tommorrow[:green],
-  comment: tommorrow[:comment],
-  symbol: tommorrow[:red],
-}
-colors.default = tommorrow[:foreground]
+theme = Riplight::ColorScheme.get_by_name(options[:theme])
 
-def style_from_color(color)
-  raise ArgumentError, "Bad color: #{color.inspect}" unless color =~ /\A[0-9a-f]{6}\Z/i
-  components = color.scan(/../).map { |s| Integer(s, 16) }
-  style = RTF::CharacterStyle.new
-  style.foreground = RTF::Colour.new(*components)
-  style
+case options[:output_format].downcase
+when 'html'
+  outputter = Riplight::Html  # TODO: make this
+when 'rtf'
+  outputter = Riplight::Rtf
 end
 
-$styles = {}
-colors.each do |k, color|
-  $styles[k] = style_from_color(color)
-end
-$styles.default = style_from_color(colors.default)
-
-
-def style_for_token(token_type, token_string)
-  case token_type
-  when :on_kw then $styles[:keyword]
-  else $styles.default
-  end
-end
-
-check_tokens_structure(tokens)
-
-font = RTF::Font.new(RTF::Font::MODERN, 'Source Code Pro')
-document = RTF::Document.new(font)
-document.paragraph do |paragraph|
-  last_line = nil
-  tokens.each do |token_data|
-    coords, token_type, token_string = token_data
-    line, char = coords
-    if last_line && line != last_line
-      paragraph.line_break
-    end
-    paragraph.apply(style_for_token(token_type, token_string)) do |n2|
-      n2 << token_string
-    end
-    last_line = line
-  end
-end
-
-File.open('my_document.rtf', 'wb') { |f| f.write(document.to_rtf) }
+source = ARGF.read
+tokens = Riplight::Lexer.lex(source)
+outputter.output tokens, theme
