@@ -44,8 +44,9 @@ module Riplight
     end
     
     def add_text(node, text)
+      p text
       text.each_line do |line|
-        node << line.chomp
+        node << line.chomp.gsub('\\', ';')
         if line.end_with?("\n")
           node.line_break
         end
