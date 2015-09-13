@@ -29,4 +29,4 @@ end
 
 source = ARGF.read
 tokens = Riplight::Lexer.lex(source)
-outputter.output tokens, theme
+outputter.output STDOUT, tokens, theme

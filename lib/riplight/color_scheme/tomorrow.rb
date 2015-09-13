@@ -16,7 +16,7 @@ module Riplight::ColorScheme
       blue: '4271ae',
       purple: '8959a8',
     }
-  
+
     # This is NOT the color scheme shown on https://github.com/ChrisKempson/Tomorrow-Theme.
     # David has customized it.
     def self.full_color_scheme(base)
@@ -46,7 +46,7 @@ module Riplight::ColorScheme
         symbol: base[:green],
       }
     end
-    
+
     Theme = full_color_scheme Base
   end
 end

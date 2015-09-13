@@ -1,56 +1,51 @@
-require 'rtf'
+require 'riplight/rtf_writer'
+require 'riplight/color_utils'
+require 'stringio'
 
 module Riplight
   class Rtf
-    def self.output(tokens, theme)
-      new(theme).output(tokens)
+    def self.output(io, tokens, theme)
+      new(theme).output(io, tokens)
     end
-
-    Font = RTF::Font.new(RTF::Font::MODERN, 'Source Code Pro')
 
     def initialize(theme)
       @theme = theme
+      initialize_color_table
     end
 
-    def style_from_color(color)
-      raise ArgumentError, "Bad color: #{color.inspect}" unless color =~ /\A[0-9a-f]{6}\Z/i
-      components = color.scan(/../).map { |s| Integer(s, 16) }
-      style = RTF::CharacterStyle.new
-      style.foreground = RTF::Colour.new(*components)
-      style
-    end
+    def initialize_color_table
+      @color_index_by_token_type = {}
+      @color_table = []
 
-    def style_for_token(token_type)
-      style_from_color(@theme[token_type] || @theme[:foreground])
-    end
+      @theme.each do |token_type, hex_color|
+        next if token_type == :background
 
-    def output(tokens)
-      puts "writing output"
-      document = document(tokens)
-      File.open('my_document.rtf', 'wb') { |f| f.write(document.to_rtf) }
-    end
+        hex_color ||= @theme[:foreground]
+        red, green, blue = ColorUtils.hex_color_parse hex_color
 
-    def document(tokens)
-      document = RTF::Document.new(Font)
-      document.paragraph do |paragraph|
-        last_line = nil
-        tokens.each do |token_data|
-          token_string, token_type = token_data
-          paragraph.apply(style_for_token(token_type)) do |n2|
-            add_text n2, token_string
-          end
-        end
-      end
-      document
-    end
-
-    def add_text(node, text)
-      text.each_line do |line|
-        node << line.chomp.gsub('\\', ';')
-        if line.end_with?("\n")
-          node.line_break
-        end
+        @color_index_by_token_type[token_type] = @color_table.size
+        @color_table << [red, green, blue, token_type.to_s]
       end
     end
+
+    def color_index_for_token(token_type)
+      @color_index_by_token_type.fetch(token_type)
+    end
+
+    def output(io, tokens)
+      @rtf = RtfWriter.new(io)
+      rtf.start 'Source Code Pro'
+      rtf.font_color_table @color_table
+      tokens.each do |token|
+        text, token_type = token
+        rtf.font_color color_index_for_token(token_type)
+        rtf.text text
+      end
+    end
+
+    private
+
+    attr_reader :rtf
+
   end
 end
