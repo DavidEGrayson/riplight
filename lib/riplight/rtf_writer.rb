@@ -10,7 +10,6 @@ module Riplight
 
     def font_color_table(colors)
       @file.puts '{\\colortbl'
-      #@file.puts ';'
       colors.each_with_index do |color, index|
         red, green, blue, comment = color
 

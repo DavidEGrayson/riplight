@@ -9,6 +9,7 @@ module Riplight
       ripper_tokens = Ripper.lex(source, filename, line_number)
       fix_simple_symbols(ripper_tokens)
       fix_string_symbols(ripper_tokens)
+      fix_label_ends(ripper_tokens)
       tokens = ripper_tokens.map do |ripper_token|
         convert_ripper_token ripper_token
       end
@@ -45,8 +46,8 @@ module Riplight
       when :on_period then :period
       when :on_semicolon then :semicolon
       when :on_sp, :on_ignored_nl, :on_nl then :space
-      when :on_symbeg, :on_label then :symbol
-      else ripper_token_type
+      when :on_symbeg, :on_label, :on_label_end then :symbol
+      else raise "Unknown ripper token type: #{ripper_token_type}"
       end
     end
 
@@ -74,6 +75,21 @@ module Riplight
         new_tokens = [
           [[row, column], :on_symbeg, ':'],
           [[row, column + 1], :on_tstring_beg, token[2][1]],
+        ]
+        ripper_tokens[index, 1] = new_tokens
+      end
+    end
+
+    def self.fix_label_ends(ripper_tokens)
+      # DANGER: Iterating over an array while increasing its length
+      values = %w{ ": ': }
+      ripper_tokens.each_index do |index|
+        token = ripper_tokens[index]
+        next unless token[1] == :on_label_end && values.include?(token[2])
+        row, column = token[0]
+        new_tokens = [
+          [[row, column], :on_tstring_end, token[2][0]],
+          [[row, column + 1], :on_label_end, ':'],
         ]
         ripper_tokens[index, 1] = new_tokens
       end

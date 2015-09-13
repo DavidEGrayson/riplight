@@ -29,7 +29,7 @@ module Riplight
     end
 
     def color_index_for_token(token_type)
-      @color_index_by_token_type.fetch(token_type)
+      @color_index_by_token_type[token_type]
     end
 
     def output(io, tokens)
@@ -38,6 +38,7 @@ module Riplight
       rtf.font_color_table @color_table
       tokens.each do |token|
         text, token_type = token
+
         rtf.font_color color_index_for_token(token_type)
         rtf.text text
       end
